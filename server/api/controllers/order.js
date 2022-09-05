@@ -243,6 +243,9 @@ const adminCancelOrder = (req, res) => {
 	const userId = req.swagger.params.user_id.value;
 	const order_id = req.swagger.params.order_id.value;
 
+	console.log(userId)
+	console.log(order_id)
+
 	if (!order_id || typeof order_id !== 'string' || !isUUID(order_id)) {
 		loggerUser.error(
 			req.uuid,
