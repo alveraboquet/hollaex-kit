@@ -70,6 +70,8 @@ const HistoryDisplay = (props) => {
 		setInitialValues({});
 	};
 
+	console.log('headers: ' + headers)
+
 	return (
 		<div className="history_block-wrapper">
 			{!isMobile && (
