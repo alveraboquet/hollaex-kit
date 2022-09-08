@@ -1,6 +1,6 @@
 'use strict';
 
-const { loggerAdmin } = require('../../config/logger');
+const { loggerAdmin, loggerOrders, loggerUser} = require('../../config/logger');
 const toolsLib = require('hollaex-tools-lib');
 const { cloneDeep, pick } = require('lodash');
 const { all } = require('bluebird');
@@ -1911,7 +1911,7 @@ const setUserBank = (req, res) => {
 			if (!user) {
 				throw new Error('User not found');
 			}
-			
+
 			const existingBankAccounts = user.bank_account;
 
 			let sendEmail = false;
@@ -1966,7 +1966,7 @@ const verifyUserBank = (req, res) => {
 		user_id,
 		bank_id
 	);
-	
+
 	toolsLib.user.getUserByKitId(user_id, false)
 		.then((user) => {
 			if (!user) {
@@ -2048,6 +2048,42 @@ const revokeUserBank = (req, res) => {
 		});
 };
 
+const adminCancelOrder = (req, res) => {
+	loggerOrders.verbose(req.uuid, 'controllers/order/adminCancelOrder auth', req.auth);
+
+	const userId = req.swagger.params.user_id.value;
+	const order_id = req.swagger.params.order_id.value;
+
+	console.log(userId)
+	console.log(order_id)
+
+	if (!order_id || typeof order_id !== 'string' || !isUUID(order_id)) {
+		loggerUser.error(
+			req.uuid,
+			'controllers/order/adminCancelOrder invalid order_id',
+			order_id
+		);
+		return res.status(400).json({ message: 'Invalid order id' });
+	}
+
+	toolsLib.order.cancelUserOrderByKitId(userId, order_id, {
+		additionalHeaders: {
+			'x-forwarded-for': req.headers['x-forwarded-for']
+		}
+	})
+		.then((data) => {
+			return res.json(data);
+		})
+		.catch((err) => {
+			loggerOrders.error(
+				req.uuid,
+				'controllers/order/adminCancelOrder',
+				err.message
+			);
+			return res.status(err.statusCode || 400).json({ message: errorMessageConverter(err) });
+		});
+};
+
 module.exports = {
 	createInitialAdmin,
 	getAdminKit,
@@ -2098,5 +2134,6 @@ module.exports = {
 	getEmailTypes,
 	setUserBank,
 	verifyUserBank,
-	revokeUserBank
+	revokeUserBank,
+	adminCancelOrder
 };
